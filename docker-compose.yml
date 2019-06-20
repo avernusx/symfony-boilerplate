@@ -1,6 +1,6 @@
 version: '2.1'
 services:
-  db:
+  mysql:
     image: mysql
     command: ["--default-authentication-plugin=mysql_native_password"]
     ports:
@@ -10,3 +10,22 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+  php-fpm:
+    build: ./docker/php-fpm
+    ports:
+      - "9010:9000"
+    volumes:
+      - "./symfony:/app"
+    depends_on:
+      - mysql
+  nginx:
+    build: ./docker/nginx
+    ports:
+      - "${NGINX_EXTERNAL_PORT}:80"
+    volumes:
+      - "./symfony:/app"
+      - "./logs/nginx:/var/log/nginx"
+    entrypoint: /bin/bash
+    command: entrypoint.sh
+    depends_on:
+      - php-fpm
